@@ -1,0 +1,252 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(SpaceImageGuessingGame());
+}
+
+class SpaceImageGuessingGame extends StatefulWidget {
+  @override
+  _SpaceImageGuessingGameState createState() => _SpaceImageGuessingGameState();
+}
+
+class _SpaceImageGuessingGameState extends State<SpaceImageGuessingGame> {
+  int _score = 0;
+  int _totalImages = 10;
+  String _currentImage = '';
+  String _feedback = '';
+  bool _isCorrect = true;
+  Color _buttonColor = Colors.blue;
+  String capitalize(String s) {
+    if (s == null || s.isEmpty) {
+      return s;
+    }
+    return s.substring(0, 1).toUpperCase() + s.substring(1);
+  }
+
+
+  List<String> _images = [
+    'assets/images/earth.jpg',
+    'assets/images/jupiter.jpg',
+    'assets/images/mars.jpg',
+    'assets/images/mercury.jpg',
+    'assets/images/neptune.jpg',
+    'assets/images/saturn.jpg',
+    'assets/images/sun.jpg',
+    'assets/images/uranus.jpg',
+    'assets/images/venus.jpg',
+    'assets/images/moon.jpg'
+  ];
+
+  final Map<String, List<String>> _possibleAnswers = {
+    'Earth': ['Earth', 'Jupiter', 'Mars', 'Venus'],
+    'Jupiter': ['Jupiter', 'Saturn', 'Neptune', 'Uranus'],
+    'Mars': ['Mars', 'Mercury', 'Venus', 'Jupiter'],
+    'Mercury': ['Mercury', 'Sun', 'Mars', 'Venus'],
+    'Neptune': ['Neptune', 'Uranus', 'Jupiter', 'Mars'],
+    'Saturn': ['Saturn', 'Jupiter', 'Uranus', 'Neptune'],
+    'Sun': ['Sun', 'Mercury', 'Venus', 'Earth'],
+    'Uranus': ['Uranus', 'Neptune', 'Saturn', 'Jupiter'],
+    'Venus': ['Venus', 'Mars', 'Earth', 'Mercury'],
+  };
+  List<String> _currentOptions = [
+    'Option A',
+    'Option B',
+    'Option C',
+    'Option D',
+  ];
+
+  void _loadNextImage() {
+    setState(() {
+      _currentImage = _images[Random().nextInt(_images.length)];
+      String imageName = _currentImage.split('/').last.split('.').first;
+      _currentOptions = List<String>.from(
+          _possibleAnswers[capitalize(imageName)] ?? []
+      )..shuffle();
+      _isCorrect = true;
+      _buttonColor = Colors.grey;
+      _feedback = '';
+    });
+  }
+
+
+
+  void _checkAnswer(String answer) {
+    if (_currentImage == 'assets/images/earth.jpg' && answer == 'Earth' ||
+        _currentImage == 'assets/images/jupiter.jpg' && answer == 'Jupiter' ||
+        _currentImage == 'assets/images/mars.jpg' && answer == 'Mars' ||
+        _currentImage == 'assets/images/mercury.jpg' && answer == 'Mercury' ||
+        _currentImage == 'assets/images/neptune.jpg' && answer == 'Neptune' ||
+        _currentImage == 'assets/images/saturn.jpg' && answer == 'Saturn' ||
+        _currentImage == 'assets/images/sun.jpg' && answer == 'Sun' ||
+        _currentImage == 'assets/images/uranus.jpg' && answer == 'Uranus' ||
+        _currentImage == 'assets/images/venus.jpg' && answer == 'Venus' ||
+        _currentImage == 'assets/images/moon.jpg' && answer == 'Moon') {
+      setState(() {
+        _score++;
+        _isCorrect = true;
+        _buttonColor = Colors.green;
+        _feedback = 'Correct!';
+      });
+    } else {
+      setState(() {
+        _isCorrect = false;
+        _buttonColor = Colors.red;
+        _feedback = 'Incorrect.';
+      });
+    }
+    if (_images.isNotEmpty) {
+      Future.delayed(Duration(seconds: 2), () {
+        _loadNextImage();
+        setState(() {
+          _isCorrect = false;
+          _buttonColor = Colors.blue;
+          _feedback = '';
+        });
+      });
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+        return AlertDialog(
+            title: Text('Game Over'),
+            content: Text('You scored $_score out of $_totalImages!'),
+            actions: [
+            TextButton(
+            onPressed: () {
+          Navigator.of(context).pop();
+          setState(() {
+            _score = 0;
+            _images = [
+              'assets/images/earth.jpg',
+              'assets/images/jupiter.jpg',
+              'assets/images/mars.jpg',
+              'assets/images/mercury.jpg',
+              'assets/images/neptune.jpg',
+              'assets/images/saturn.jpg',
+              'assets/images/sun.jpg',
+              'assets/images/uranus.jpg',
+              'assets/images/venus.jpg',
+              'assets/images/moon.jpg'
+            ];
+            _loadNextImage;
+            _isCorrect = true;
+            _buttonColor = Colors.blue;
+            _feedback = '';
+          });
+            },
+              child: Text('Play Again'),
+            ),
+            ],
+        );
+          },
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNextImage();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Space Image Guessing Game'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Score: $_score / $_totalImages',
+                style: TextStyle(fontSize: 24.0),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16.0),
+              Text(
+                _feedback,
+                style: TextStyle(
+                  fontSize: 20.0,
+                  color: _isCorrect == true ? Colors.green : Colors.red,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16.0),
+              Container(
+                height: 250.0,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.grey,
+                    width: 2.0,
+                  ),
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                child: Image.asset(_currentImage),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Earth'),
+                child: Text('Earth'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Jupiter'),
+                child: Text('Jupiter'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Mars'),
+                child: Text('Mars'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Mercury'),
+                child: Text('Mercury'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Neptune'),
+                child: Text('Neptune'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Saturn'),
+                child: Text('Saturn'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Sun'),
+                child: Text('Sun'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Uranus'),
+                child: Text('Uranus'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () => _checkAnswer('Venus'),
+                child: Text('Venus'),
+                style: ElevatedButton.styleFrom(primary: _buttonColor),
+              ),
+              SizedBox(height: 16.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
